@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <title>RandomChat</title>
+</body>
+</head>
+<body>
+    <div class="mask" id="mask"></div>
+    <div class="loger" id="loger">
+        <div class="loger_cap"></div>
+        <div class="loger_main">
+            <p class="login_main_i">Board</p>
+            <div class="X" onclick="logout()"></div>
+            <input class="login_main_t" id="user_name" type="text" placeholder="Namne here">
+            <input class="login_main_t" id="room" type="text" placeholder="no function">
+            <input class="login_main_b" id="meet" type="button" onclick="roll()" value="Random">
+            <div >
+                <p class="login_main_q" id="signup_sw" onclick="tester()">忘記密碼</p>
+                <p class="login_main_q" id="signup_sw" onclick="tester()">還沒有帳號?</p>
+            </div>
+        </div>
+    </div>
+    <div class="body_ctrl">
+    <nav class="nav_bar">
+        <div>Random chat</div>
+    </nav>
+    
+    <section class="input_frame">
+        <div class="chat_content">
+            <!-- 訊息放置處 -->
+            <div>內容在這1</div>
+            <div>內容在這</div>
+            <div>內容在這</div>
+            <div>內容在這4</div>
+        </div>
+        <div class="input_div">
+            <input class="input_bar" type="text" id="input_bar">
+        </div>
+    </section>
+</div>
+    <script type="text/javascript" src="js/script.js" charset="utf-8"></script>
+</body>
+</html>

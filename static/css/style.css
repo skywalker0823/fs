@@ -1,0 +1,132 @@
+body,ol,ul,h1,h2,h3,h4,h5,h6,p,th,td,dl,dd,form,fieldset,legend,input,textarea,select{margin:0;padding:0} 
+body{
+    font-family: Noto Sans TC;
+    height: 100vh;
+    width: 100vw;
+} 
+
+.mask{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0px;
+    top: 0px;
+    background: #000000;
+    opacity: 0.7;
+    display: none;
+    z-index: 250;
+}
+.loger{
+    position: fixed; /* positioning in center of page */
+    top: 220px;
+    left: 50vw;
+    transform: translate(-50%,-50%);
+    width: 340px;
+    background-color: white;
+    display: none;
+    flex-direction: column;
+    z-index: 500;
+    border-radius: 6px;
+}
+
+.loger_cap{
+    height: 10px;
+    background: linear-gradient(270deg, #e46728 0%, #7658e2 100%);
+    border-radius: 6px 6px 0px 0px;
+}
+.loger_main{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.login_main_i{
+    margin: 15px;
+    font-family: 'Noto Sans TC';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 24px;
+    color: #666666;
+}
+.X{
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    right: 20px;
+    top: 30px;
+    background-color: #000000;
+    cursor: pointer;
+
+}
+.login_main_t{
+    margin-bottom: 10px;
+    width: 310px;
+    height: 47px;
+    background: #FFFFFF;
+    border: 1px solid #CCCCCC;
+    box-sizing: border-box;
+    border-radius: 5px;
+    font-family: 'Noto Sans TC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    color: #666666;
+    padding-left: 15px;
+}
+.login_main_b{
+    width: 310px;
+    height: 47px;
+    background: #7658e2;
+    border-radius: 5px;
+    font-family: 'Noto Sans TC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 19px;
+    color: #FFFFFF;
+    border: none;
+    cursor: pointer;
+}
+.login_main_q{
+    margin-top: 10px;
+    margin-bottom: 15px;
+    font-family: 'Noto Sans TC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    color: #666666;
+    cursor: pointer;
+    
+}
+.body_ctrl{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.nav_bar{
+    max-width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+
+.input_frame{
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.input_div{
+    width: 80%;
+}
+
+.input_bar{
+    width: 100%;
+    height: 35px;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    font-size: 20px;
+    margin: 3px;
+    padding: 5px;
+}

@@ -1,4 +1,5 @@
 
+    let me;
     document.addEventListener("DOMContentLoaded", () => {
         init_user();
         init_socket();
@@ -7,8 +8,10 @@
 
     //init user
     init_user = async () => {
+        
+
+
         //偵測使用者狀態 如已有連線則幫助他連回
-        let me;
         options = {
             method: "GET",
             credentials: "same-origin",
@@ -24,12 +27,12 @@
             me = result.username;
             chatter_inner = document.getElementById("chatter_inner");
             console.log("this user is still connected! taking back to your room...");
-            loger.style.display = "none";
-            mask.style.display = "none";
-            chatter.style.filter = "none";
-            window.removeEventListener("scroll", locker);
+            loger_off();
             //重連機制
-
+            socket.emit("reconnect",{
+                username:me
+            })
+            
 
 
 
@@ -38,10 +41,9 @@
 
         }else if(result.type == "new"){
         //New user, open loger 開啟登入div
+            console.log("new user, open loger")
             loger_on();
             //重新挑選對象
-            roll();
-
         }else{
             console.log("cannot define new or back")
             loger_on();
@@ -58,6 +60,10 @@
         //start socket
         socket = io.connect("/random");
 
+        //recieve all sp messages
+        socket.on("special", (data) => {
+            console.log("sp",data)
+        });
 
 
         //test socket connection
@@ -97,18 +103,66 @@
                     return
                 }
                 console.log(content)
+
+                //先渲染自身的訊息
+                draw(content,"me")
+
+
                 send(content)
                 //clear input bar
                 input_bar.value = ""
             }
+
+
+
+
+
         })
+
+
+        //開啟接收訊息
+        socket.on("chat", (data) => { 
+            console.log("socket_on_chat_get",data)
+            //若為己方訊息 不渲染但把字體改成 opacity=1 後 不作為
+            draw(data.msg,"other")
+        }
+        )
     }
 
 
     send = async(content) => {
         console.log("sending...")
+        //websocket chat send
+        socket.emit("chat",{
+            username:me,
+            msg:content,
+        })
+    }
+
+    draw = (content,who) => {
+        //渲染訊息
+        let chat_content = document.getElementById("chat_content")
+        let new_msg = document.createElement("div")
+        new_msg.className = "msg"
+        new_msg.innerHTML = content
+
+        //判斷是自己還是對方
+        if(who == "me"){
+            new_msg.className += " me"
+        }else if(who == "other"){
+            new_msg.className += " other"
+        }
+        chat_content.appendChild(new_msg)
+        chat_content.scrollTop = chat_content.scrollHeight;
 
     }
+
+
+
+
+
+
+
 
     test_socket = async() => {
         let data
@@ -124,6 +178,10 @@
         return false
     }
 
+
+
+
+
     loger_on = () => {
         let loger = document.getElementById("loger");
         let mask = document.getElementById("mask");
@@ -132,9 +190,24 @@
         window.addEventListener("scroll", locker);
       };
 
+
+
+
+
+    loger_off = () => {
+        let loger = document.getElementById("loger");
+        let mask = document.getElementById("mask");
+        loger.style.display = "none";
+        mask.style.display = "none";
+        window.removeEventListener("scroll", locker);
+        };
+
       locker = () => {
         window.scrollTo(0, 0);
       };
+
+
+
 
 
 
@@ -155,14 +228,59 @@
         };
         const response = await fetch("/roll?username=" + user_name, options);
         const result = await response.json();
-        console.log(result);
         if (result.ok) {
-          console.log("申請隨機中");
-          loger.style.display = "none";
-          mask.style.display = "none";
-          window.removeEventListener("scroll", locker);
-          return result;
+           //請求成功   
+          console.log(result);
+          console.log("request roll success, closing loger and mask");
+          link_start(result);
+          return;
         }
         console.log("request roll failed");
-        return {"error":"request roll failed"}
+        return {"error":"request roll failed"};
     };
+
+
+
+
+
+
+
+    clear_session = async () => {
+        options = {
+            method: "GET",
+            credentials: "same-origin",
+            headers: {
+                "content-type": "application/json",
+            },
+        };
+        const response = await fetch("/clear_session", options);
+        const result = await response.json();
+        console.log(result);
+        if (result.ok) {
+            console.log("clear session success");
+            // clear all session
+            sessionStorage.clear();
+
+            loger_on();
+            return result;
+        }
+        console.log("clear session failed");
+        return {"error":"clear session failed"}
+    }
+
+
+
+
+
+
+
+    link_start = async (result) => {
+        socket.emit("link_start",result)
+        if(result.ok){
+            console.log("link start success")
+            loger_off();
+            return
+        }
+    }
+
+

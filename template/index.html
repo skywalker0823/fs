@@ -16,22 +16,23 @@
         <div class="loger_main">
             <p class="login_main_i">Board</p>
             <div class="X" onclick="logout()"></div>
-            <input class="login_main_t" id="user_name" type="text" placeholder="Namne here">
-            <input class="login_main_t" id="room" type="text" placeholder="no function">
-            <input class="login_main_b" id="meet" type="button" onclick="roll()" value="Random">
+            <input class="login_main_t" id="user_name" type="text" placeholder="ID">
+            <input class="login_main_t" id="room" type="text" placeholder="密語">
+            <input class="login_main_b" id="meet" type="button" onclick="roll()" value="Start Chat">
             <div >
                 <p class="login_main_q" id="signup_sw" onclick="tester()">忘記密碼</p>
-                <p class="login_main_q" id="signup_sw" onclick="tester()">還沒有帳號?</p>
+                <!-- <p class="login_main_q" id="signup_sw" onclick="tester()">還沒有帳號?</p> -->
             </div>
         </div>
     </div>
     <div class="body_ctrl">
     <nav class="nav_bar">
         <div>Random chat</div>
+        <div onclick=clear_session()>clear session</div>
     </nav>
     
     <section class="input_frame">
-        <div class="chat_content">
+        <div class="chat_content" id="chat_content">
             <!-- 訊息放置處 -->
             <div>內容在這1</div>
             <div>內容在這</div>

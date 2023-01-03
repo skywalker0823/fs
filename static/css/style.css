@@ -106,15 +106,16 @@ body{
 .nav_bar{
     max-width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
 }
 
 
 .input_frame{
-    max-width: 100%;
+    width: 80%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin: 0 auto;
 }
 
 .input_div{
@@ -129,4 +130,31 @@ body{
     font-size: 20px;
     margin: 3px;
     padding: 5px;
+}
+
+.chat_content{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+
+}
+
+/* set this to left */
+.msg_me{
+    display: flex;
+    justify-content: flex-start;
+    opacity: 1;
+}
+.msg_other{
+    display: flex;
+    justify-content: flex-end;
+    opacity: 1;
+}
+
+
+.msg_me_half{
+    opacity: 0.3;
+    display: flex;
+    justify-content: flex-start;
 }

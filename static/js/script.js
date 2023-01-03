@@ -1,5 +1,6 @@
 
     let me;
+    let message_id = 0;
     document.addEventListener("DOMContentLoaded", () => {
         init_user();
         init_socket();
@@ -31,12 +32,7 @@
             //重連機制
             socket.emit("reconnect",{
                 username:me
-            })
-            
-
-
-
-
+            })            
 
 
         }else if(result.type == "new"){
@@ -54,7 +50,7 @@
 
     //init socket
     init_socket = async() => {
-
+        let input_bar =  document.getElementById("input_bar")
         //initialize
         console.log("initializing...")
         //start socket
@@ -63,6 +59,21 @@
         //recieve all sp messages
         socket.on("special", (data) => {
             console.log("sp",data)
+            if(data.history_messages){
+                console.log("這裡是斷線前的歷史訊息",data.history_messages)
+                data.history_messages.forEach((m)=>{
+                    console.log(m)
+                    if(m.username == me){
+                        draw(m.message,"me")
+                        return
+                    }else{
+                        draw(m.message,"other")
+                    }
+                })
+                return
+            }else{
+                console.log("連回來囉，但你們啥都還沒說")
+            }
         });
 
 
@@ -77,8 +88,6 @@
 
         
         //輸入欄位
-        let input_bar =  document.getElementById("input_bar")
-
 
 
         //input detector 偵測使用者正在輸入
@@ -112,22 +121,31 @@
                 //clear input bar
                 input_bar.value = ""
             }
-
-
-
-
-
         })
 
 
-        //開啟接收訊息
+        //開啟接收訊息, server hit confirmed
         socket.on("chat", (data) => { 
             console.log("socket_on_chat_get",data)
-            //若為己方訊息 不渲染但把字體改成 opacity=1 後 不作為
-            draw(data.msg,"other")
-        }
-        )
-    }
+            //if it's my msg, change message opacity to 1
+            if(data.who == me){
+                console.log("this is my msg, change opacity to 1")
+                //delete this id
+                //delay 1 second
+                //if message_id matches, then change opacity to 1
+                console.log(data)
+                
+                setTimeout(()=>{
+                    id = "me_message"+data.message_id
+                    document.getElementById(id).className = "msg_me"
+                }
+                ,250)      
+                message_id += 1          
+                return
+            };
+            draw(data.msg,"other");
+        })
+    };
 
 
     send = async(content) => {
@@ -136,9 +154,10 @@
         socket.emit("chat",{
             username:me,
             msg:content,
+            message_id:message_id
         })
-    }
-
+    };
+    // draw(m.message,"other")
     draw = (content,who) => {
         //渲染訊息
         let chat_content = document.getElementById("chat_content")
@@ -147,11 +166,15 @@
         new_msg.innerHTML = content
 
         //判斷是自己還是對方
+        // if it's me, make opacity=0.5
+        console.log("who",who,"me",me)
         if(who == "me"){
-            new_msg.className += " me"
+            new_msg.className += "_me_half"
+            new_msg.id = "me_message"+message_id
         }else if(who == "other"){
-            new_msg.className += " other"
+            new_msg.className += "_other"
         }
+
         chat_content.appendChild(new_msg)
         chat_content.scrollTop = chat_content.scrollHeight;
 
@@ -259,8 +282,11 @@
         if (result.ok) {
             console.log("clear session success");
             // clear all session
+            console.log("clear session storage")
             sessionStorage.clear();
-
+            // clear chat content
+            console.log("clear chat content")
+            document.getElementById("chat_content").innerHTML = "";
             loger_on();
             return result;
         }

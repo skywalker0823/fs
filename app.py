@@ -24,21 +24,17 @@ random_que = {}
 
 # 聊天歷史紀錄，未來套用 redis，目前先用 dict，當有一方在，記錄會保留，當雙方離開，記錄會消失
 history_messages = {}
-# history_messages example = {
-#     'room1': {
-#         'user1': {'message': 'Hello, how are you?', 'timestamp': datetime.datetime.now()},
-#         'user2': {'message': "I'm doing well, thanks for asking. How about you?", 'timestamp': datetime.datetime.now()},
-#         'user1': {'message': "I'm doing pretty good too. Do you like chatting with random people online?", 'timestamp': datetime.datetime.now()},
-#         'user2': {'message': 'Yes, I find it to be a fun and interesting way to meet new people. How about you?', 'timestamp': datetime.datetime.now()}
-#     },
-#     'room2': {
-#         'user3': {'message': 'Hi there', 'timestamp': datetime.datetime.now()},
-#         'user4': {'message': 'Hi, my name is Jane', 'timestamp': datetime.datetime.now()},
-#         'user3': {'message': 'My name is John', 'timestamp': datetime.datetime.now()},
-#         'user4': {'message': 'Nice to meet you too, John. What do you like to do in your free time?', 'timestamp': datetime.datetime.now()}
-#     }
+# history_messages format example
+# history_messages = {
+#     room1: [ 
+#         {username: user1, message: "hello", time: "2021-01-01 00:00:00"},
+#         {username: user2, message: "hi", time: "2021-01-01 00:00:01"}
+#     ],
+#     room2: [
+#         {username: user3, message: "hello", time: "2021-01-01 00:00:00"},
+#         {username: user4, message: "hi", time: "2021-01-01 00:00:01"}
+#     ]
 # }
-
 
 
 # ID可隨意 可重複 無關資料庫 識別都靠 socket id
@@ -55,6 +51,8 @@ def index():
 @app.route("/back_checker")
 def back_check():
     if session.get("room") != None:
+        print("back_checker :room:",session.get("room"),", username:",session.get("username"))
+        # send back old messages of this room
         return jsonify({"ok": True, "type": "back", "room": session.get('room'), "username": session.get('username')})
     else:
         return jsonify({"ok":True,"type":"new"})
@@ -68,8 +66,12 @@ def test_connection():
 # 對話來往用
 @socketio.on("chat", namespace="/random")
 def transfer_chat(data):
+    # print randon que
+    print(random_que)
+
     # 取得該使用者 username
     print(">>>",data)
+    
     username = session.get('username')
     # 取得該房間
     room = session.get('room')
@@ -77,8 +79,17 @@ def transfer_chat(data):
     # 前端發來訊息會附上此 content 發出者，會比對session 來辨識是否是己方發言
     # 若是己方發言 會將前端己方發言由半透明變成 opacity = 1
     # 若是對方發言 則照正常程序貼上訊息
+
+    # record message into history_messages
+    # 若該房間沒有歷史紀錄 則建立
+    if room not in history_messages:
+        history_messages[room] = []
+    # 將對方發言存入歷史紀錄, timestamp like 20220101235959
+    history_messages[room].append({"username": username, "message": data["msg"], "timestamp": datetime.datetime.now().strftime("%Y%m%d%H%M%S"), "message_id": data["message_id"]})
+    # print history messages
+    print(history_messages)
     print("誰:",username," 房號:",room)
-    emit("chat", {"who":username,"msg":data["msg"],"room":room}, room=room, broadcast=True)
+    emit("chat", {"who":username,"msg":data["msg"],"room":room,"message_id":data["message_id"]}, room=room, broadcast=True)
         # 將對方發言存入歷史紀錄
         # history_messages[room][username] = {"message": data["msg"], "timestamp": datetime.datetime.now()}
 
@@ -103,14 +114,16 @@ def roll():
                     print("有人,將使用者加入房間")
                     # 若有人 將使用者加入房間
                     session['room'] = room
+                    
                     random_que[room].append(username)
                     print("房間字典狀態",random_que)
                     return jsonify({"ok": True, "room": room, "username": username,"status":"將使用者加入房間"})
             # 若無人 則建立新房間
             print("無人,建立新房間")
-            #產生亂數英文+數字房間號碼
+            #產生亂數英文   數字房間號碼
             room = ''.join(choices(string.ascii_letters + string.digits, k=6))
             random_que[room] = [username]
+            # random_que[room] = [username]
             session['room'] = room
             print("房間字典狀態",random_que)
             return jsonify({"ok": True, "room": room, "username": username,"status":"建立新房間"})
@@ -145,11 +158,18 @@ def reconnect(data):
     #check if data room is same as session room
     room = session.get('room')
     join_room(room)
-    emit('special', {'ok': True, 'username': username}, room=room)
+    print("history_message",history_messages)
+    if room in history_messages:
+        emit('special', {'ok': True, 'username': username,"history_messages":history_messages[session.get('room')]}, room=room)
+    else:
+        emit('special', {'ok': True, 'username': username}, room=room)
 
 #清除 session
 @app.route("/clear_session", methods=['GET'])
 def clear_session():
+    # if no user in room, delete history
+    if session.get("room") in random_que and len(random_que[session.get('room')]) == 0:
+        del history_messages[session.get('room')]
     session.clear()
     return jsonify({"ok": True})
 

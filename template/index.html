@@ -15,12 +15,13 @@
         <div class="loger_cap"></div>
         <div class="loger_main">
             <p class="login_main_i">Board</p>
-            <div class="X" onclick="logout()"></div>
-            <input class="login_main_t" id="user_name" type="text" placeholder="ID">
-            <input class="login_main_t" id="room" type="text" placeholder="密語">
-            <input class="login_main_b" id="meet" type="button" onclick="roll()" value="Start Chat">
+            <!-- <div class="X" onclick="logout()"></div> -->
+            <input class="login_main_t" id="user_name" type="text" placeholder="名稱">
+            <input class="login_main_t" id="secret" type="text" placeholder="密語">
+            <input class="login_main_b" id="meet" type="button" onclick="init_new()" value="Start Chat">
             <div >
-                <p class="login_main_q" id="signup_sw" onclick="tester()">忘記密碼</p>
+                <p class="login_main_q" id="total_online" >目前線上人數:</p>
+                
                 <!-- <p class="login_main_q" id="signup_sw" onclick="tester()">還沒有帳號?</p> -->
             </div>
         </div>
@@ -28,7 +29,7 @@
     <div class="body_ctrl">
     <nav class="nav_bar">
         <div>Random chat</div>
-        <div onclick=clear_session()>離開聊天室 :(</div>
+        <div onclick=clear_all()>離開聊天室 :(</div>
     </nav>
     
     <section class="input_frame">

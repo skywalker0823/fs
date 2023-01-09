@@ -39,6 +39,7 @@
         //Else is all new
         }else{
             console.log(">>>new<<<")
+            console.log(result)
             loger_on(result);
         };
         return result;
@@ -83,6 +84,9 @@
                         console.log(m)
                         if(m.username == me){
                             draw(m.message,"me")
+                            //change class name to msg_me
+                            document.getElementById("me_message"+message_id).className = "msg_me"
+                            message_id+=1
                             return
                         }else{
                             draw(m.message,"other")
@@ -116,6 +120,56 @@
                 }
             });
         }
+
+
+
+
+                //input detector 偵測使用者正在輸入
+        input_bar.addEventListener('input',()=>{
+            console.log("inputing...")
+
+            //後加入websocket
+            // socket.emit("inputing",{
+            //     username:me
+            // })
+        })
+
+        //detec user press enter
+        input_bar.addEventListener('keydown',(e)=>{
+            let content = input_bar.value
+
+            // if user has inpot something and press enter
+            if(e.keyCode == 13){
+                //if content is empty then do nothing
+                if(content == ""){
+                    console.log("u enter nothing...")
+                    return
+                }
+                console.log(content)
+
+                //先渲染自身的訊息
+                draw(content,"me")
+
+
+                send(content)
+                //clear input bar
+                input_bar.value = ""
+            }
+        })
+        socket.on("chat", (data) => {
+            console.log("chat",data)
+            if (data.who == me){
+                // turn this message class name to msg_me
+                console.log(data)
+                document.getElementById("me_message"+message_id).className = "msg_me"
+                message_id+=1
+                console.log("My message get!")
+
+                return
+            }
+            draw(data.msg,"other")
+            return
+        });
     }
 
 
@@ -248,39 +302,39 @@
     // };
 
 
-    // send = async(content) => {
-    //     console.log("sending...")
-    //     //websocket chat send
-    //     socket.emit("chat",{
-    //         username:me,
-    //         msg:content,
-    //         message_id:message_id
-    //     })
-    // };
+    send = async(content) => {
+        console.log("sending...")
+        //websocket chat send
+        socket.emit("chat",{
+            username:me,
+            msg:content,
+            message_id:message_id
+        })
+    };
 
 
-    // // draw(m.message,"other")
-    // draw = (content,who) => {
-    //     //渲染訊息
-    //     let chat_content = document.getElementById("chat_content")
-    //     let new_msg = document.createElement("div")
-    //     new_msg.className = "msg"
-    //     new_msg.innerHTML = content
+    // draw(m.message,"other")
+    draw = (content,who) => {
+        //渲染訊息
+        let chat_content = document.getElementById("chat_content")
+        let new_msg = document.createElement("div")
+        new_msg.className = "msg"
+        new_msg.innerHTML = content
 
-    //     //判斷是自己還是對方
-    //     // if it's me, make opacity=0.5
-    //     console.log("who",who,"me",me)
-    //     if(who == "me"){
-    //         new_msg.className += "_me_half"
-    //         new_msg.id = "me_message"+message_id
-    //     }else if(who == "other"){
-    //         new_msg.className += "_other"
-    //     }
+        //判斷是自己還是對方
+        // if it's me, make opacity=0.5
+        console.log("who:",who," me:",me)
+        if(who == "me"){
+            new_msg.className += "_me_half"
+            new_msg.id = "me_message"+message_id
+        }else if(who == "other"){
+            new_msg.className += "_other"
+        }
 
-    //     chat_content.appendChild(new_msg)
-    //     chat_content.scrollTop = chat_content.scrollHeight;
+        chat_content.appendChild(new_msg)
+        chat_content.scrollTop = chat_content.scrollHeight;
 
-    // }
+    }
 
 
 
@@ -297,6 +351,8 @@
         mask.style.display = "block";
         window.addEventListener("scroll", locker);
         let total_online = document.getElementById("total_online");
+        // reset total_online
+        total_online.innerHTML = "目前線上人數: ";
         total_online.innerHTML = total_online.innerHTML+=result.total_online_users;
     };
 
@@ -356,6 +412,7 @@
 
     // User quit
     clear_all = async () => {
+        //改為 socket.emit("leave")
         options = {
             method: "GET",
             credentials: "same-origin",
@@ -365,6 +422,7 @@
         };
         const response = await fetch("/clear_all", options);
         const result = await response.json();
+
 
         //clear websocket connection
         console.log("clear websocket connection",result)
@@ -382,6 +440,7 @@
 
             //close socket connection
             io.connect("/random").close();
+            console.log(result)
             loger_on(result);
             return result;
         }

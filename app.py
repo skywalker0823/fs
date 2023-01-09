@@ -44,6 +44,9 @@ history_messages = {}
 
 @app.route('/')
 def index():
+    # print random_que and history_messages
+    print("random_que:",random_que)
+    print("history_messages:",history_messages)
     return rt('index.html')
 
 # back checker
@@ -67,36 +70,36 @@ def test_connection():
     emit('test_connection', {'ok': True})
 
 
-# # recieve chat message
-# # 對話來往用
-# @socketio.on("chat", namespace="/random")
-# def transfer_chat(data):
-#     # print randon que
-#     print(random_que)
+# recieve chat message
+# 對話來往用
+@socketio.on("chat", namespace="/random")
+def transfer_chat(data):
+    # print randon que
+    print(random_que)
 
-#     # 取得該使用者 username
-#     print(">>>",data)
+    # 取得該使用者 username
+    print(">>>",data)
     
-#     username = session.get('username')
-#     # 取得該房間
-#     room = session.get('room')
+    username = session.get('username')
+    # 取得該房間
+    room = session.get('room')
 
-#     # 前端發來訊息會附上此 content 發出者，會比對session 來辨識是否是己方發言
-#     # 若是己方發言 會將前端己方發言由半透明變成 opacity = 1
-#     # 若是對方發言 則照正常程序貼上訊息
+    # 前端發來訊息會附上此 content 發出者，會比對session 來辨識是否是己方發言
+    # 若是己方發言 會將前端己方發言由半透明變成 opacity = 1
+    # 若是對方發言 則照正常程序貼上訊息
 
-#     # record message into history_messages
-#     # 若該房間沒有歷史紀錄 則建立
-#     if room not in history_messages:
-#         history_messages[room] = []
-#     # 將對方發言存入歷史紀錄, timestamp like 20220101235959
-#     history_messages[room].append({"username": username, "message": data["msg"], "timestamp": datetime.datetime.now().strftime("%Y%m%d%H%M%S"), "message_id": data["message_id"]})
-#     # print history messages
-#     print(history_messages)
-#     print("誰:",username," 房號:",room)
-#     emit("chat", {"who":username,"msg":data["msg"],"room":room,"message_id":data["message_id"]}, room=room, broadcast=True)
-#         # 將對方發言存入歷史紀錄
-#         # history_messages[room][username] = {"message": data["msg"], "timestamp": datetime.datetime.now()}
+    # record message into history_messages
+    # 若該房間沒有歷史紀錄 則建立
+    if room not in history_messages:
+        history_messages[room] = []
+    # 將對方發言存入歷史紀錄, timestamp like 20220101235959
+    history_messages[room].append({"username": username, "message": data["msg"], "timestamp": datetime.datetime.now().strftime("%Y%m%d%H%M%S"), "message_id": data["message_id"]})
+    # print history messages
+    print(history_messages)
+    print("誰:",username," 房號:",room)
+    emit("chat", {"who":username,"msg":data["msg"],"room":room,"message_id":data["message_id"]}, room=room, broadcast=True)
+    # 將對方發言存入歷史紀錄
+    # history_messages[room][username] = {"message": data["msg"], "timestamp": datetime.datetime.now()}
 
 
 
@@ -157,11 +160,27 @@ def test_connection():
 # connect
 @socketio.on("go_connect", namespace="/random")
 def reconnect(data):
-    secret = data["secret"]
+    # if data["secret"]:
+    #     secret = data["secret"]
+    # data["secret"] = ""
     # check status
     if data["status"] == "back":
         print("back")
-        return
+        # send back history messages
+        # 取得該使用者 username
+        username = session.get('username')
+        # 取得該房間
+        room = session.get('room')
+        # 將使用者加入房間
+        join_room(room)
+        # 發送訊息給房間內所有人
+        try:
+            if history_messages[room]:
+                emit('special', {'ok': True, 'username': username, "history_messages": history_messages[room]}, room=room)
+                return
+        except:
+            emit('special', {'ok': True, 'username': username, "history_messages": []}, room=room)
+            return
     elif data["status"] == "new":
         print("new")
         # 取得該使用者 username
@@ -178,8 +197,9 @@ def reconnect(data):
         join_room(room)
         # 發送訊息給房間內所有人
         emit('go_connect', {'ok': True, 'username': username,"room":room}, room=room)
-    else:
         return
+    else:
+        return {"error": True, "message": "Leave room error"}
 
 
     # # 取得該使用者 username
@@ -201,15 +221,15 @@ def reconnect(data):
 @app.route("/clear_all", methods=['GET'])
 def clear_session():
     username = session.get('username')
-    # clear history message of this user
-    if username in history_messages:
-        del history_messages[username]
-    # leave and delete room
     room = session.get('room')
-    if room in random_que:
-        random_que[room].remove(username)
-        if len(random_que[room]) == 0:
-            del random_que[room]
+    # clear this user from random_que if excist or not
+    random_que[room].remove(username)
+    # if no one in this room, delete this room as well
+    if len(random_que[room]) == 0:
+        del random_que[room]
+    #delete history messages
+    if room in history_messages:
+        del history_messages[room]
     # clear session
     session.clear()
     # count random_que for online users
@@ -218,22 +238,27 @@ def clear_session():
         total_online_users += len(random_que[room])
     return jsonify({"ok": True,"total_online_users":total_online_users})
 
-# 離開房間
-@socketio.on("leave", namespace="/random")
-def leave(data):
-    # 取得該使用者 username
-    username = session.get('username')
-    # 取得該房間
-    room = session.get('room')
-    # 將使用者從房間移除
-    random_que[room].remove(username)
-    # 若房間內無人 刪除房間
-    if len(random_que[room]) == 0:
-        del random_que[room]
-    # 發送訊息給房間內所有人
-    emit('leave', {'ok': True, 'username': username}, room=room)
-    # 離開房間
-    leave_room(room)
+
+# @socketio.on("leave", namespace="/random")
+# def leave(data):
+#     # 取得該使用者 username
+#     username = session.get('username')
+#     # 取得該房間
+#     room = session.get('room')
+#     # 將使用者從房間移除
+#     random_que[room].remove(username)
+#     print(">>>>>>>>>>",room)
+#     # 若房內無人 刪除歷史訊息
+#     if len(random_que[room]) == 0:
+#         del history_messages[room]
+#     # 若房間內無人 刪除房間
+#     if len(random_que[room]) == 0:
+#         del random_que[room]
+#     # 發送訊息給房間內所有人
+#     emit('leave', {'ok': True, 'username': username}, room=room)
+#     # 離開房間
+#     leave_room(room)
+#     session.clear()
 
 
 

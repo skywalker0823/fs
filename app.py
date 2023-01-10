@@ -102,61 +102,6 @@ def transfer_chat(data):
     # history_messages[room][username] = {"message": data["msg"], "timestamp": datetime.datetime.now()}
 
 
-
-
-# # roll
-# # 確認是否有房間
-# @app.route('/link_start', methods=['GET', 'POST'])
-# def roll():
-#     # 先看有無房間 若無則自建
-#     # 會進到此處都是已經無 session 狀態
-#     try:
-#         if request.method == 'GET':
-#             # regist new 
-#             print("設置好username 並丟給session")
-#             username = request.args.get('username')
-#             session['username'] = username
-#             for room in random_que:
-#                 # 檢查房間是否有人
-#                 if len(random_que[room]) < 2:
-#                     print("有人,將使用者加入房間")
-#                     # 若有人 將使用者加入房間
-#                     session['room'] = room
-                    
-#                     random_que[room].append(username)
-#                     print("房間字典狀態",random_que)
-#                     return jsonify({"ok": True, "room": room, "username": username,"status":"將使用者加入房間"})
-#             # 若無人 則建立新房間
-#             print("無人,建立新房間")
-#             #產生亂數英文   數字房間號碼
-#             room = ''.join(choices(string.ascii_letters + string.digits, k=6))
-#             random_que[room] = [username]
-#             # random_que[room] = [username]
-#             session['room'] = room
-#             print("房間字典狀態",random_que)
-#             return jsonify({"ok": True, "room": room, "username": username,"status":"建立新房間"})
-#         return jsonify({"error": True, "message": "Invalid request method"})
-#     except Exception as e:
-#         print(e)
-#         return jsonify({"error": True, "message": "Something went wrong"})
-
-
-# # link start
-# @socketio.on("link_start", namespace="/random")
-# def link_start(data):
-#     # 取得該使用者 username
-#     username = session.get('username')
-#     # 取得該房間
-#     #check if data room is same as session room
-#     if data["room"]==session.get('room'):
-#         room = session.get('room')
-#         # 將使用者加入房間
-#         join_room(room)
-#         # 發送訊息給房間內所有人
-#         emit('link_start', {'ok': True, 'username': username}, room=room)
-#     else:
-#         emit('link_start', {'ok': False, 'message': '房號錯誤'})
-
 # connect
 @socketio.on("go_connect", namespace="/random")
 def reconnect(data):
@@ -237,33 +182,6 @@ def clear_session():
     for room in random_que:
         total_online_users += len(random_que[room])
     return jsonify({"ok": True,"total_online_users":total_online_users})
-
-
-# @socketio.on("leave", namespace="/random")
-# def leave(data):
-#     # 取得該使用者 username
-#     username = session.get('username')
-#     # 取得該房間
-#     room = session.get('room')
-#     # 將使用者從房間移除
-#     random_que[room].remove(username)
-#     print(">>>>>>>>>>",room)
-#     # 若房內無人 刪除歷史訊息
-#     if len(random_que[room]) == 0:
-#         del history_messages[room]
-#     # 若房間內無人 刪除房間
-#     if len(random_que[room]) == 0:
-#         del random_que[room]
-#     # 發送訊息給房間內所有人
-#     emit('leave', {'ok': True, 'username': username}, room=room)
-#     # 離開房間
-#     leave_room(room)
-#     session.clear()
-
-
-
-
-
 
 if __name__=='__main__':
     socketio.run(app,host='0.0.0.0',debug=True,port=3000)

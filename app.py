@@ -7,7 +7,7 @@ from os import urandom
 import datetime
 from random import randint,random,choices
 # import cv2
-import os
+import os, traceback
 import string
 
 app = Flask(__name__,static_folder="static",static_url_path="/",template_folder="template")
@@ -131,18 +131,31 @@ def reconnect(data):
         # 取得該使用者 username
         session['username'] = data["username"]
         username = session.get('username')
-        # Create new room
-        # 產生亂數英文   數字房間號碼
-        room = ''.join(choices(string.ascii_letters + string.digits, k=6))
-        random_que[room] = [username]
-        # random_que[room] = [username]
-        session['room'] = room
-        print("房間字典狀態",random_que)
-        # 將使用者加入房間
-        join_room(room)
-        # 發送訊息給房間內所有人
-        emit('go_connect', {'ok': True, 'username': username,"room":room}, room=room)
-        return
+        # if there is room with only one user
+        if len(random_que) > 0:
+            # find room with only one user
+            for room in random_que:
+                if len(random_que[room]) == 1:
+                    # add user to room
+                    random_que[room].append(username)
+                    # 將使用者加入房間
+                    join_room(room)
+                    # 發送訊息給房間內所有人
+                    emit('go_connect', {'ok': True, 'username': username,"room":room}, room=room)
+                    return
+        # if there is no room with only one user
+        else:
+            # Create new room
+            # 產生亂數英文   數字房間號碼
+            room = ''.join(choices(string.ascii_letters + string.digits, k=6))
+            random_que[room] = [username]
+            session['room'] = room
+            print("房間字典狀態",random_que)
+            # 將使用者加入房間
+            join_room(room)
+            # 發送訊息給房間內所有人
+            emit('go_connect', {'ok': True, 'username': username,"room":room}, room=room)
+            return
     else:
         return {"error": True, "message": "Leave room error"}
 
@@ -165,23 +178,30 @@ def reconnect(data):
 #清除 session
 @app.route("/clear_all", methods=['GET'])
 def clear_session():
-    username = session.get('username')
-    room = session.get('room')
-    # clear this user from random_que if excist or not
-    random_que[room].remove(username)
-    # if no one in this room, delete this room as well
-    if len(random_que[room]) == 0:
-        del random_que[room]
-    #delete history messages
-    if room in history_messages:
-        del history_messages[room]
-    # clear session
-    session.clear()
-    # count random_que for online users
     total_online_users = 0
     for room in random_que:
         total_online_users += len(random_que[room])
-    return jsonify({"ok": True,"total_online_users":total_online_users})
+    try:
+        username = session.get('username')
+        room = session.get('room')
+        # clear this user from random_que if excist or not
+        random_que[room].remove(username)
+        # if no one in this room, delete this room as well
+        if len(random_que[room]) == 0:
+            del random_que[room]
+        #delete history messages
+        if room in history_messages:
+            del history_messages[room]
+        # count random_que for online users
+    except Exception as e:
+            print("type error: " + str(e))
+            print(traceback.format_exc())
+    finally:
+        session.clear()
+        print(random_que,history_messages)
+        return jsonify({"ok": True,"total_online_users":total_online_users})
+
+
 
 if __name__=='__main__':
     socketio.run(app,host='0.0.0.0',debug=True,port=3000)

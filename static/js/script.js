@@ -90,6 +90,8 @@
                             return
                         }else{
                             draw(m.message,"other")
+                            document.getElementById("other_message"+message_id).className = "msg_other"
+
                         }
                     })
                     return
@@ -329,6 +331,7 @@
             new_msg.id = "me_message"+message_id
         }else if(who == "other"){
             new_msg.className += "_other"
+            new_msg.id = "other_message"+message_id
         }
 
         chat_content.appendChild(new_msg)
